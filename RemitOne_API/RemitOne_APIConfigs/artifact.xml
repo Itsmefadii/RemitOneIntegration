@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><artifacts>
+    <artifact name="RemitOne" groupId="com.example.api" version="1.0.0" type="synapse/api" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/api/RemitOne.xml</file>
+    </artifact>
+    <artifact name="RemitOne_swagger" groupId="com.example.metadata" version="1.0.0" type="synapse/metadata" serverRole="EnterpriseServiceBus">
+        <file>src/main/resources/metadata/RemitOne_swagger.yaml</file>
+    </artifact>
+    <artifact name="RemitOne_metadata" groupId="com.example.metadata" version="1.0.0" type="synapse/metadata" serverRole="EnterpriseServiceBus">
+        <file>src/main/resources/metadata/RemitOne_metadata.yaml</file>
+    </artifact>
+    <artifact name="AcceptPayoutTransactionsEndpoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/AcceptPayoutTransactionsEndpoint.xml</file>
+    </artifact>
+    <artifact name="CheckPayoutStatusEndpoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/CheckPayoutStatusEndpoint.xml</file>
+    </artifact>
+    <artifact name="GetPayoutTransactionDetailsEndpoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/GetPayoutTransactionDetailsEndpoint.xml</file>
+    </artifact>
+    <artifact name="GetPayoutTransactionEndpoints" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/GetPayoutTransactionEndpoints.xml</file>
+    </artifact>
+    <artifact name="ProcessPayoutTransactionEndpoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/ProcessPayoutTransactionEndpoint.xml</file>
+    </artifact>
+    <artifact name="SubmitPayoutEndPoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/SubmitPayoutEndPoint.xml</file>
+    </artifact>
+    <artifact name="PayoutTransactionStore" groupId="com.example.message-store" version="1.0.0" type="synapse/message-store" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/message-stores/PayoutTransactionStore.xml</file>
+    </artifact>
+    <artifact name="GetPayoutTransactionDetails" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/GetPayoutTransactionDetails.xml</file>
+    </artifact>
+    <artifact name="GetPayoutTransactions" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/GetPayoutTransactions.xml</file>
+    </artifact>
+    <artifact name="SubmitPayoutBangladesh" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/SubmitPayoutBangladesh.xml</file>
+    </artifact>
+    <artifact name="TransactionsIterator" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/TransactionsIterator.xml</file>
+    </artifact>
+    <artifact name="CreateQuoteSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/CreateQuoteSequence.xml</file>
+    </artifact>
+    <artifact name="KeyCloak-USI_Money_Sequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/KeyCloak-USI_Money_Sequence.xml</file>
+    </artifact>
+    <artifact name="CreateQuoteEndpoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/CreateQuoteEndpoint.xml</file>
+    </artifact>
+    <artifact name="keyClaok-USIMoneyEndpoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/keyClaok-USIMoneyEndpoint.xml</file>
+    </artifact>
+    <artifact name="CreateTransactionSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/CreateTransactionSequence.xml</file>
+    </artifact>
+    <artifact name="CreateTransactionEndpoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/CreateTransactionEndpoint.xml</file>
+    </artifact>
+    <artifact name="ConfirmTransactionSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/ConfirmTransactionSequence.xml</file>
+    </artifact>
+    <artifact name="ConfirmTransactionEndpoimt" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/ConfirmTransactionEndpoimt.xml</file>
+    </artifact>
+    <artifact name="GetBankName" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/GetBankName.xml</file>
+    </artifact>
+    <artifact name="BankNameStore" groupId="com.example.message-store" version="1.0.0" type="synapse/message-store" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/message-stores/BankNameStore.xml</file>
+    </artifact>
+    <artifact name="UpdateBankTransactionStatus" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/UpdateBankTransactionStatus.xml</file>
+    </artifact>
+    <artifact name="PayoutTransactionDetailsStore" groupId="com.example.message-store" version="1.0.0" type="synapse/message-store" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/message-stores/PayoutTransactionDetailsStore.xml</file>
+    </artifact>
+    <artifact name="GetBankNameEndpoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/GetBankNameEndpoint.xml</file>
+    </artifact>
+    <artifact name="BankNameIteration" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/BankNameIteration.xml</file>
+    </artifact>
+    <artifact name="AcceptPayoutTransactionSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/AcceptPayoutTransactionSequence.xml</file>
+    </artifact>
+    <artifact name="PartnerRoutingSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/PartnerRoutingSequence.xml</file>
+    </artifact>
+    <artifact name="BankTransactionResponseSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/BankTransactionResponseSequence.xml</file>
+    </artifact>
+    <artifact name="BankTransactionStatusSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/BankTransactionStatusSequence.xml</file>
+    </artifact>
+    <artifact name="GetTransactionStatusEndpoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/GetTransactionStatusEndpoint.xml</file>
+    </artifact>
+    <artifact name="BankTransactionStatusIteratorSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/BankTransactionStatusIteratorSequence.xml</file>
+    </artifact>
+    <artifact name="TransactionStatusStore" groupId="com.example.message-store" version="1.0.0" type="synapse/message-store" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/message-stores/TransactionStatusStore.xml</file>
+    </artifact>
+    <artifact name="CheckPayoutStatusSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/CheckPayoutStatusSequence.xml</file>
+    </artifact>
+    <artifact name="ProcessPayoutTransactionSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/ProcessPayoutTransactionSequence.xml</file>
+    </artifact>
+    <artifact name="RequestCancellationEndpoint" groupId="com.example.endpoint" version="1.0.0" type="synapse/endpoint" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/endpoints/RequestCancellationEndpoint.xml</file>
+    </artifact>
+    <artifact name="HandleCancellationSequence" groupId="com.example.sequence" version="1.0.0" type="synapse/sequence" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/sequences/HandleCancellationSequence.xml</file>
+    </artifact>
+    <artifact name="CreatePaymentScheduler" groupId="com.example.task" version="1.0.0" type="synapse/task" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/tasks/CreatePaymentScheduler.xml</file>
+    </artifact>
+    <artifact name="PaymentStatusScheduler" groupId="com.example.task" version="1.0.0" type="synapse/task" serverRole="EnterpriseServiceBus">
+        <file>src/main/synapse-config/tasks/PaymentStatusScheduler.xml</file>
+    </artifact>
+</artifacts>

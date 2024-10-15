@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="BankNameIteration" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <log level="custom" separator=",">
+        <property expression="get-property('axis2', 'HTTP_SC')" name="HTTP_Status_Code"/>
+    </log>
+    <property expression="get-property('axis2', 'HTTP_SC')" name="BANK_NAME_HTTP_STATUS_CODE" scope="default" type="STRING"/>
+    <property name="Endpoint_NAME" scope="default" type="STRING" value="GetBankName"/>
+    <switch source="get-property('BANK_NAME_HTTP_STATUS_CODE')">
+        <case regex="200">
+            <iterate expression="//*[local-name()='Bank']" id="BankNameIteration" sequential="true">
+                <target>
+                    <sequence>
+                        <log level="custom">
+                            <property expression="//*[local-name()='bank_name']" name="BankName"/>
+                        </log>
+                        <property expression="//*[local-name()='bank_name']" name="BankName" scope="default" type="STRING"/>
+                        <property expression="get-property('CURRENT_SEQUENCE_NAME')" name="CurrentSequence" scope="default" type="STRING"/>
+                        <property expression="get-property('BANK_NAME_HTTP_STATUS_CODE')" name="BANK_NAME_HTTP_STATUS_CODE" scope="default" type="STRING"/>
+                        <dbreport>
+                            <connection>
+                                <pool>
+                                    <driver>com.mysql.jdbc.Driver</driver>
+                                    <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                                    <user>admin</user>
+                                    <password>dobuy10014</password>
+                                </pool>
+                            </connection>
+                            <statement>
+                                <sql><![CDATA[INSERT into Response_Codes ( EndpointName, ResponseCodes, Messages) Values (?, ?, ?)]]></sql>
+                                <parameter expression="get-property('Endpoint_NAME')" type="VARCHAR"/>
+                                <parameter expression="get-property('BANK_NAME_HTTP_STATUS_CODE')" type="VARCHAR"/>
+                                <parameter expression="get-property('BankName')" type="VARCHAR"/>
+                            </statement>
+                        </dbreport>
+                        <store messageStore="BankNameStore" sequence="GetPayoutTransactions"/>
+                    </sequence>
+                </target>
+            </iterate>
+        </case>
+        <case regex="400">
+            <property name="ERROR_MESSAGE" scope="default" type="STRING" value="BANK NOT FOUND"/>
+            <log level="custom">
+                <property expression="get-property('ERROR_MESSAGE')" name="Message"/>
+            </log>
+            <dbreport>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[INSERT into Response_Codes ( Sequence, ResponseCodes, Messages) Values (?, ?, ?)]]></sql>
+                    <parameter expression="get-property('CURRENT_SEQUENCE_NAME')" type="VARCHAR"/>
+                    <parameter expression="get-property('BANK_NAME_HTTP_STATUS_CODE')" type="VARCHAR"/>
+                    <parameter expression="get-property('ERROR_MESSAGE')" type="VARCHAR"/>
+                </statement>
+            </dbreport>
+            <respond/>
+        </case>
+        <default/>
+    </switch>
+</sequence>

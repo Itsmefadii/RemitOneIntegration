@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="CreateTransactionSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <log level="custom" separator=",">
+        <property expression="json-eval($)" name="CreateQuoteResponse"/>
+        <property expression="json-eval($.message)" name="Message"/>
+        <property expression="json-eval($.status)" name="Status"/>
+        <property expression="json-eval($.data.quote_id)" name="QuoteId"/>
+    </log>
+    <filter xmlns:soap12="http://www.w3.org/2003/05/soap-envelope" xpath="not(get-property('SourceOfIncome')) or not(get-property('Purpose')) or not(get-property('AgentCustomer')) or not(get-property('SenderMobileNumber')) or not(get-property('SenderFirstName')) or not(get-property('SenderLastName')) or not(get-property('SenderId')) or not(get-property('SenderDOB')) or not(get-property('SenderPlaceOfBirth')) or not(get-property('SenderNationality')) or not(get-property('SenderAddress')) or not(get-property('SenderPostcode')) or not(get-property('SenderTown')) or not(get-property('SenderCountry')) or not(get-property('ReceiverMobileNumber')) or not(get-property('BenefFirstname')) or not(get-property('BenefLastname')) or not(get-property('ReceiverAddress')) or not(get-property('ReceiverTown')) or not(get-property('ReceiveCountry')) or not(get-property('QuoteId'))">
+        <then>
+            <log level="custom">
+                <property name="ERROR" value="Missing or corrupt required parameters in the payload"/>
+            </log>
+            <makefault version="soap12">
+                <code value="soap12Env:Sender" xmlns:soap12Env="http://www.w3.org/2003/05/soap-envelope"/>
+                <reason value="Required parameter is missing or corrupt"/>
+            </makefault>
+        </then>
+        <else>
+            <dblookup>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "sender"]]></sql>
+                    <result column="Value" name="Sender"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "channel"]]></sql>
+                    <result column="Value" name="Channel"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "company"]]></sql>
+                    <result column="Value" name="Company"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "branch"]]></sql>
+                    <result column="Value" name="Branch"/>
+                </statement>
+            </dblookup>
+            <log level="custom" separator=",">
+                <property expression="get-property('Sender')" name="SenderLog"/>
+                <property expression="get-property('Channel')" name="ChannelLog"/>
+                <property expression="get-property('Company')" name="CompanyLog"/>
+                <property expression="get-property('Branch')" name="BranchLog"/>
+            </log>
+            <propertyGroup>
+                <property expression="get-property('Sender')" name="Sender" scope="default" type="STRING"/>
+                <property expression="get-property('Channel')" name="Channel" scope="default" type="STRING"/>
+                <property expression="get-property('Company')" name="Company" scope="default" type="STRING"/>
+                <property expression="get-property('Branch')" name="Branch" scope="default" type="STRING"/>
+            </propertyGroup>
+            <property expression="json-eval($.data.quote_id)" name="QuoteId" scope="default" type="STRING"/>
+            <header name="Content-Type" scope="transport" value="application/json"/>
+            <header expression="get-property('Sender')" name="sender" scope="transport"/>
+            <header expression="get-property('Channel')" name="channel" scope="transport"/>
+            <header expression="get-property('Company')" name="company" scope="transport"/>
+            <header expression="get-property('Branch')" name="branch" scope="transport"/>
+            <header expression="get-property('AuthHeader')" name="Authorization" scope="transport"/>
+            <payloadFactory media-type="json">
+                <format>{
+            "type": "SEND",
+            "source_of_income": "$1",
+            "purpose_of_txn": "$2",
+            "instrument": "REMITTANCE",
+            "message": "Agency transaction",
+            "sender": {
+                "agent_customer_number": "$3",
+                "mobile_number": "$4",
+                "first_name": "$5",
+                "last_name": "$6",
+                "sender_id": [{
+                    "id_code": "2",
+                    "id": "$7",
+                    "issued_on": "2023-12-10",
+                    "valid_through": "2030-12-10"
+                }],
+                "date_of_birth": "$8",
+                "country_of_birth": "$9",
+                "nationality": "$10",
+                "sender_address": [{
+                    "address_type": "PRESENT",
+                    "address_line": "$11",
+                    "post_code": "$12",
+                    "town_name": "$13",
+                    "country_code": "$14"
+                }]
+            },
+            "receiver": {
+                "mobile_number": "$15",
+                "first_name": "$16",
+                "last_name": "$17",
+                "date_of_birth": "1999-12-10",
+                "gender": "F",
+                "receiver_address": [{
+                    "address_type": "PRESENT",
+                    "address_line": "$18",
+                    "town_name": "$19",
+                    "country_code": "$20"
+                }],
+                "nationality": "$21",
+                "relation_code": "32",
+                "bank_details": {
+                    "account_type_code": "1",
+                    "routing_code": "SBIN0004069",
+                    "account_number": "34572443993"
+                }
+            },
+            "transaction": {
+                "quote_id": "$22"
+            }
+        }</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('SourceOfIncome')"/>
+                    <arg evaluator="xml" expression="get-property('Purpose')"/>
+                    <arg evaluator="xml" expression="get-property('AgentCustomer')"/>
+                    <arg evaluator="xml" expression="get-property('SenderMobileNumber')"/>
+                    <arg evaluator="xml" expression="get-property('SenderFirstName')"/>
+                    <arg evaluator="xml" expression="get-property('SenderLastName')"/>
+                    <arg evaluator="xml" expression="get-property('SenderId')"/>
+                    <arg evaluator="xml" expression="get-property('SenderDOB')"/>
+                    <arg evaluator="xml" expression="get-property('SenderPlaceOfBirth')"/>
+                    <arg evaluator="xml" expression="get-property('SenderNationality')"/>
+                    <arg evaluator="xml" expression="get-property('SenderAddress')"/>
+                    <arg evaluator="xml" expression="get-property('SenderPostcode')"/>
+                    <arg evaluator="xml" expression="get-property('SenderTown')"/>
+                    <arg evaluator="xml" expression="get-property('SenderCountry')"/>
+                    <arg evaluator="xml" expression="get-property('ReceiverMobileNumber')"/>
+                    <arg evaluator="xml" expression="get-property('BenefFirstname')"/>
+                    <arg evaluator="xml" expression="get-property('BenefLastname')"/>
+                    <arg evaluator="xml" expression="get-property('ReceiverAddress')"/>
+                    <arg evaluator="xml" expression="get-property('ReceiverTown')"/>
+                    <arg evaluator="xml" expression="get-property('ReceiveCountry')"/>
+                    <arg evaluator="xml" expression="get-property('QuoteId')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" scope="axis2" type="STRING" value="application/json"/>
+            <log level="full"/>
+            <send receive="ProcessPayoutTransaction">
+                <endpoint key="CreateTransactionEndpoint"/>
+            </send>
+        </else>
+    </filter>
+</sequence>

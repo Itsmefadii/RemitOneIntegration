@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="BankTransactionResponseSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <log level="custom">
+        <property name="CHECHK_PAYOUT_STATUS" value="PROCESS_TRANSACTION"/>
+    </log>
+    <property name="checkPayoutStatusResponse" scope="transport" type="STRING" value=""/>
+    <enrich>
+        <source clone="true" type="body"/>
+        <target property="checkPayoutStatusResponse" type="property"/>
+    </enrich>
+    <log>
+        <property expression="json-eval($.cashout_id)" name="CashOutId"/>
+    </log>
+    <property expression="json-eval($.cashout_id)" name="CashOutId" scope="default" type="STRING"/>
+    <dbreport>
+        <connection>
+            <pool>
+                <driver>com.mysql.jdbc.Driver</driver>
+                <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                <user>admin</user>
+                <password>dobuy10014</password>
+            </pool>
+        </connection>
+        <statement>
+            <sql><![CDATA[
+        INSERT INTO BankTransactions (TransactionRef, AcceptTransaction, BankTransactionRef, BankTransactionStatus)
+        VALUES (?, ?, ?, ?)
+    ]]></sql>
+            <parameter expression="get-property('TransactionReference')" type="VARCHAR"/>
+            <parameter type="VARCHAR" value="0"/>
+            <parameter expression="get-property('CashOutId')" type="VARCHAR"/>
+            <parameter type="VARCHAR" value="Pending"/>
+        </statement>
+        <statement>
+            <sql><![CDATA[UPDATE RemitOneTransactions SET BankTransactionStatus = ? WHERE TransactionRef = ?]]></sql>
+            <parameter type="VARCHAR" value="Success"/>
+            <parameter expression="get-property('TransactionReference')" type="VARCHAR"/>
+        </statement>
+    </dbreport>
+    <respond/>
+</sequence>

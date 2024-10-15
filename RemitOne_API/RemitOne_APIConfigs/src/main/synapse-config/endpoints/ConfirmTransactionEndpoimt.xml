@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<endpoint name="ConfirmTransactionEndpoimt" xmlns="http://ws.apache.org/ns/synapse">
+    <http method="post" uri-template="http://3.249.132.12:8290/amr/paas/api/v1_0/pass/confirmtransaction">
+        <suspendOnFailure>
+            <initialDuration>-1</initialDuration>
+            <progressionFactor>1.0</progressionFactor>
+        </suspendOnFailure>
+        <markForSuspension>
+            <retriesBeforeSuspension>0</retriesBeforeSuspension>
+        </markForSuspension>
+    </http>
+</endpoint>

@@ -1,0 +1,22 @@
+<data transports="http https" serviceGroup="" serviceNamespace="" name="Get_Bank_Name">
+  <description />
+  <query useConfig="GetBankNameDS" id="GetBankNameQuery">
+    <sql>select bank_name from BankList;</sql>
+    <result element="Banks" rowName="Bank">
+      <element name="bank_name" column="bank_name" xsdType="string" requiredRoles="" />
+    </result>
+  </query>
+  <operation name="GetBankNameOperation">
+    <call-query href="GetBankNameQuery" />
+  </operation>
+  <resource method="POST" path="/getBankName">
+    <description />
+    <call-query href="GetBankNameQuery" />
+  </resource>
+  <config id="GetBankNameDS">
+    <property name="driverClassName">com.mysql.cj.jdbc.Driver</property>
+    <property name="url">jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</property>
+    <property name="username">admin</property>
+    <property name="password">dobuy10014</property>
+  </config>
+</data>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="UpdateBankTransactionStatus" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <property expression="json-eval($)" name="ProcessPayoutResponse" scope="default" type="STRING"/>
+    <log level="custom">
+        <property expression="get-property('ProcessPayoutResponse')" name="ProcessPayoutResponse"/>
+    </log>
+    <log level="full" separator=","/>
+    <log level="custom">
+        <property expression="get-property('TransactionReference')" name="TransactionReference"/>
+    </log>
+    <property expression="//status" name="TransactionStatus" scope="default" type="STRING"/>
+    <log level="custom" separator=",">
+        <property expression="get-property('TransactionStatus')" name="TransactionStatusLog"/>
+    </log>
+    <log level="full" separator=",">
+        <property expression="get-property('axis2', 'HTTP_SC')" name="HTTP_Status_Code"/>
+    </log>
+    <property expression="get-property('axis2', 'HTTP_SC')" name="ProcessPayout_HTTP_STATUS_CODE" scope="default" type="STRING"/>
+    <property name="Endpoint_NAME" scope="default" type="STRING" value="ProcessPayoutEndpoint"/>
+    <switch source="get-property('ProcessPayout_HTTP_STATUS_CODE')">
+        <case regex="200">
+            <dbreport>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[INSERT into Response_Codes ( EndpointName, ResponseCodes, Messages) Values (?, ?, ?)]]></sql>
+                    <parameter expression="get-property('Endpoint_NAME')" type="VARCHAR"/>
+                    <parameter expression="get-property('ProcessPayout_HTTP_STATUS_CODE')" type="VARCHAR"/>
+                    <parameter expression="get-property('ProcessPayoutResponse')" type="VARCHAR"/>
+                </statement>
+            </dbreport>
+            <dbreport>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[UPDATE RemitOneTransactions SET R1TransactionStatus = ? WHERE TransactionRef = ?]]></sql>
+                    <parameter expression="get-property('TransactionStatus')" type="VARCHAR"/>
+                    <parameter expression="get-property('TransactionReference')" type="VARCHAR"/>
+                </statement>
+            </dbreport>
+            <log/>
+            <respond/>
+        </case>
+        <case regex="400">
+            <log level="full">
+                <property name="Error" value="Unauthorized"/>
+            </log>
+            <property name="CheckPayoutError" scope="default" type="STRING" value="Server Not Found"/>
+            <payloadFactory media-type="xml">
+                <format>
+                    <error>
+                        <message>$1</message>
+                    </error>
+                </format>
+                <args>
+                    <arg evaluator="xml" expression="ProcessPayoutError"/>
+                </args>
+            </payloadFactory>
+            <dbreport>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[INSERT into Response_Codes ( EndpointName, ResponseCodes, Messages) Values (?, ?, ?)]]></sql>
+                    <parameter expression="get-property('Endpoint_NAME')" type="VARCHAR"/>
+                    <parameter expression="get-property('CheckPayout_HTTP_STATUS_CODE')" type="VARCHAR"/>
+                    <parameter expression="get-property('ProcessPayoutError')" type="VARCHAR"/>
+                </statement>
+            </dbreport>
+            <respond/>
+        </case>
+        <default/>
+    </switch>
+</sequence>

@@ -1,0 +1,28 @@
+<data name="GetTransactionStatusDS" serviceNamespace="" serviceGroup="" transports="http https">
+  <description />
+  <config id="TransactionStatusDS">
+    <property name="driverClassName">com.mysql.jdbc.Driver</property>
+    <property name="url">jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</property>
+    <property name="username">admin</property>
+    <property name="password">dobuy10014</property>
+  </config>
+  <operation name="GetTransactionStatusOperation">
+    <call-query href="TransactionStatusQuery" />
+  </operation>
+  <resource path="/getTransStatus" method="POST">
+    <description />
+    <call-query href="TransactionStatusQuery" />
+  </resource>
+  <query id="TransactionStatusQuery" useConfig="TransactionStatusDS">
+    <sql>SELECT TransactionRef, AcceptTransaction, BankTransactionRef, BankTransactionStatus, StatusDate FROM BankTransactions a 
+where  a.BankTransactionStatus Not In ('Completed','Cancelled')  and 
+StatusDate in (Select max(StatusDate) from BankTransactions b where a.TransactionRef = b.TransactionRef
+group by b.TransactionRef);</sql>
+    <result rowName="TransactionStatus" element="BankTransactionStatuses">
+      <element name="TransactionReference" requiredRoles="" xsdType="string" column="TransactionRef" />
+      <element name="AcceptTransaction" requiredRoles="" xsdType="string" column="AcceptTransaction" />
+      <element name="BankTransactionReference" requiredRoles="" xsdType="string" column="BankTransactionRef" />
+      <element name="BankTransactionStatus" requiredRoles="" xsdType="string" column="BankTransactionStatus" />
+    </result>
+  </query>
+</data>

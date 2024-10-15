@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="GetPayoutTransactionDetails" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <log level="full">
+        <property name="PROCESS_TRANSACTION" value="PROCESS_TRANSACTION"/>
+    </log>
+    <property name="payoutResponse" scope="transport" type="STRING" value=""/>
+    <log level="custom">
+        <property expression="get-property('payoutResponse')" name="Payout Response 1"/>
+    </log>
+    <enrich>
+        <source clone="true" type="body"/>
+        <target property="payoutResponse" type="property"/>
+    </enrich>
+    <log level="custom">
+        <property expression="get-property('payoutResponse')" name="Payout Response 2"/>
+    </log>
+    <log level="custom">
+        <property expression="get-property('payoutResponse')/transaction" name="Payout Response 3"/>
+    </log>
+    <log level="custom">
+        <property expression="get-property('payoutResponse')/trans_ref" name="Payout Response 4"/>
+    </log>
+    <property expression="get-property('payoutResponse')/trans_ref" name="TransactionReference" scope="default" type="STRING"/>
+    <log level="custom">
+        <property expression="get-property('TransactionReference')" name="Transaction Response"/>
+    </log>
+    <log level="full">
+        <property name="TransactionReference" value="PROCESS_TRANSACTION"/>
+    </log>
+    <property expression="get-property('BankName')" name="BANK_NAME" scope="default" type="STRING"/>
+    <log level="custom" separator=",">
+        <property expression="get-property('BANK_NAME')" name="BankNameLog"/>
+    </log>
+    <log level="custom">
+        <property expression="get-property('payoutResponse')" name="Payout Response 2"/>
+        <property expression="get-property('payoutResponse')/transaction" name="Payout Response 3"/>
+        <property expression="get-property('payoutResponse')/trans_ref" name="Payout Response 4"/>
+        <property expression="get-property('TransactionReference')" name="Transaction Response"/>
+        <property expression="get-property('BANK_NAME')" name="BankNameLog"/>
+        <property expression="get-property('R1_username')" name="R1_usernameLog"/>
+        <property expression="get-property('R1_password')" name="R1_passwordLog"/>
+        <property expression="get-property('R1_pin')" name="R1_pinLog"/>
+    </log>
+    <property expression="get-property('payoutResponse')/trans_ref" name="TransactionReference" scope="default" type="STRING"/>
+    <property expression="get-property('BankName')" name="BANK_NAME" scope="default" type="STRING"/>
+    <payloadFactory media-type="xml">
+        <format>
+            <params xmlns="">
+                <trans_ref>$1</trans_ref>
+                <username>$2</username>
+                <password>$3</password>
+                <pin>$4</pin>
+                <bank_name>$5</bank_name>
+            </params>
+        </format>
+        <args>
+            <arg evaluator="xml" expression="get-property('TransactionReference')"/>
+            <arg evaluator="xml" expression="get-property('R1_username')"/>
+            <arg evaluator="xml" expression="get-property('R1_password')"/>
+            <arg evaluator="xml" expression="get-property('R1_pin')"/>
+            <arg evaluator="xml" expression="get-property('BANK_NAME')"/>
+        </args>
+    </payloadFactory>
+    <property name="messageType" scope="axis2" type="STRING" value="application/x-www-form-urlencoded"/>
+    <log level="full"/>
+    <send receive="PartnerRoutingSequence">
+        <endpoint key="GetPayoutTransactionDetailsEndpoint"/>
+    </send>
+</sequence>

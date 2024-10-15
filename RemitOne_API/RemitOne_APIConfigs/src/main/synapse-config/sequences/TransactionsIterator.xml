@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="TransactionsIterator" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <property name="payoutResponse" scope="transport" type="STRING" value=""/>
+    <log level="custom">
+        <property expression="get-property('payoutResponse')" name="Payout Response 1"/>
+    </log>
+    <enrich>
+        <source clone="true" type="body"/>
+        <target property="payoutResponse" type="property"/>
+    </enrich>
+    <log level="custom">
+        <property expression="get-property('payoutResponse')" name="Payout Response 2"/>
+    </log>
+    <log level="custom" separator=",">
+        <property expression="get-property('axis2', 'HTTP_SC')" name="HTTP_Status_Code"/>
+    </log>
+    <property expression="get-property('axis2', 'HTTP_SC')" name="GetPayoutTrans_HTTP_STATUS_CODE" scope="default" type="STRING"/>
+    <property name="Endpoint_NAME" scope="default" type="STRING" value="GetPayoutTransactionsEndpoint"/>
+    <log level="custom">
+        <property expression="//count" name="Count"/>
+    </log>
+    <property expression="//count" name="TransactionCount" scope="default" type="STRING"/>
+    <log level="custom">
+        <property expression="get-property('TransactionCount')" name="TransactionCountLog"/>
+    </log>
+    <switch source="get-property('TransactionCount')">
+        <case regex="0">
+            <log level="custom">
+                <property name="Error" value="Transaction not found"/>
+            </log>
+            <payloadFactory media-type="xml">
+                <format>
+                    <error>
+                        <message>Transaction not found</message>
+                    </error>
+                </format>
+                <args/>
+            </payloadFactory>
+            <respond/>
+        </case>
+        <default>
+            <switch source="get-property('GetPayoutTrans_HTTP_STATUS_CODE')">
+                <case regex="200">
+                    <dbreport>
+                        <connection>
+                            <pool>
+                                <driver>com.mysql.jdbc.Driver</driver>
+                                <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                                <user>admin</user>
+                                <password>dobuy10014</password>
+                            </pool>
+                        </connection>
+                        <statement>
+                            <sql><![CDATA[INSERT into Response_Codes ( EndpointName, ResponseCodes, Messages) Values (?, ?, ?)]]></sql>
+                            <parameter expression="get-property('Endpoint_NAME')" type="VARCHAR"/>
+                            <parameter expression="get-property('BANK_NAME_HTTP_STATUS_CODE')" type="VARCHAR"/>
+                            <parameter expression="get-property('payoutResponse')" type="VARCHAR"/>
+                        </statement>
+                    </dbreport>
+                    <iterate expression="//transaction" id="payoutAccount" sequential="true">
+                        <target>
+                            <sequence>
+                                <log/>
+                                <store messageStore="PayoutTransactionStore" sequence="GetPayoutTransactionDetails"/>
+                            </sequence>
+                        </target>
+                    </iterate>
+                </case>
+                <case regex="400">
+                    <property name="ERROR_MESSAGE" scope="default" type="STRING" value="IT CAN BE ANY ERROR"/>
+                    <log level="custom">
+                        <property expression="get-property('ERROR_MESSAGE')" name="Message"/>
+                    </log>
+                    <dbreport>
+                        <connection>
+                            <pool>
+                                <driver>com.mysql.jdbc.Driver</driver>
+                                <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                                <user>admin</user>
+                                <password>dobuy10014</password>
+                            </pool>
+                        </connection>
+                        <statement>
+                            <sql><![CDATA[INSERT into Response_Codes ( Sequence, ResponseCodes, Messages) Values (?, ?, ?)]]></sql>
+                            <parameter expression="get-property('CURRENT_SEQUENCE_NAME')" type="VARCHAR"/>
+                            <parameter expression="get-property('BANK_NAME_HTTP_STATUS_CODE')" type="VARCHAR"/>
+                            <parameter expression="get-property('ERROR_MESSAGE')" type="VARCHAR"/>
+                        </statement>
+                    </dbreport>
+                    <respond/>
+                </case>
+                <default/>
+            </switch>
+        </default>
+    </switch>
+</sequence>

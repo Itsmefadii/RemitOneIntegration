@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="PartnerRoutingSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <log level="custom">
+        <property expression="get-property('TransactionReference')" name="Transaction Accept"/>
+        <property expression="//receive_country" name="Receive Country"/>
+    </log>
+    <log level="custom" separator=",">
+        <property expression="get-property('axis2', 'HTTP_SC')" name="HTTP_Status_Code"/>
+    </log>
+    <property expression="get-property('axis2', 'HTTP_SC')" name="GetPayoutTranDetails_HTTP_STATUS_CODE" scope="default" type="STRING"/>
+    <property name="Endpoint_NAME" scope="default" type="STRING" value="GetPayoutTransactionDetailsEndpoint"/>
+    <propertyGroup>
+        <property expression="//agent_trans_ref" name="AgentTransRef" scope="default" type="STRING"/>
+        <property expression="//trans_type" name="TransactionType" scope="default" type="STRING"/>
+        <property expression="//status" name="Status" scope="default" type="STRING"/>
+        <property expression="//pay_method" name="PaymentMethod" scope="default" type="STRING"/>
+        <property expression="//receive_country" name="ReceiveCountry" scope="default" type="STRING"/>
+        <property expression="//receive_currency" name="ReceiveCountryCurrencyCode" scope="default" type="STRING"/>
+        <property expression="//processing_bank" name="BankName" scope="default" type="STRING"/>
+        <property expression="//receive_amount" name="ReceiveAmount" scope="default" type="STRING"/>
+        <property expression="//receive_currency" name="ReceiveCurrency" scope="default" type="STRING"/>
+        <property expression="//benef_ac" name="BenefAc" scope="default" type="STRING"/>
+        <property expression="//benef_branch_code" name="BenefBranchCode" scope="default" type="STRING"/>
+        <property expression="//benef_branch_telephone" name="BenefBranchTelephone" scope="default" type="STRING"/>
+        <property expression="//benef_firstname" name="BenefFirstname" scope="default" type="STRING"/>
+        <property expression="//benef_lastname" name="BenefLastname" scope="default" type="STRING"/>
+        <property expression="//send_country" name="SendCountry" scope="default" type="STRING"/>
+        <property expression="//send_currency" name="SendCountryCurrencyCode" scope="default" type="STRING"/>
+        <property expression="//send_amount" name="SendAmount" scope="default" type="STRING"/>
+        <property name="SourceOfIncome" scope="default" type="STRING" value="SLRY"/>
+        <property expression="//purpose" name="Purpose" scope="default" type="STRING"/>
+        <property expression="//remitter_mobile" name="SenderMobileNumber" scope="default" type="STRING"/>
+        <property expression="//remitter_name" name="SenderFullName" scope="default" type="STRING"/>
+        <property expression="//remitter_firstname" name="SenderFirstName" scope="default" type="STRING"/>
+        <property expression="//remitter_lastname" name="SenderLastName" scope="default" type="STRING"/>
+        <property expression="//remitter_id" name="SenderId" scope="default" type="STRING"/>
+        <property expression="//remitter_dob" name="SenderDOB" scope="default" type="STRING"/>
+        <property expression="//receive_country" name="SenderPlaceOfBirth" scope="default" type="STRING"/>
+        <property expression="//remitter_id1_type" name="SenderDocumentType" scope="default" type="STRING"/>
+        <property expression="//remitter_id1_details" name="SenderDocument" scope="default" type="STRING"/>
+        <property expression="//remitter_nationality" name="SenderNationality" scope="default" type="STRING"/>
+        <property expression="//remitter_address" name="SenderAddress" scope="default" type="STRING"/>
+        <property expression="//remitter_postcode" name="SenderPostcode" scope="default" type="STRING"/>
+        <property expression="//remitter_address1" name="SenderTown" scope="default" type="STRING"/>
+        <property expression="//remitter_country" name="SenderCountry" scope="default" type="STRING"/>
+        <property expression="//benef_mobile" name="ReceiverMobileNumber" scope="default" type="STRING"/>
+        <property expression="//benef_place_of_birth" name="ReceiverPlaceOfBirth" scope="default" type="STRING"/>
+        <property expression="//benef_nationality" name="ReceiverNationality" scope="default" type="STRING"/>
+        <property expression="//benef_address1" name="ReceiverAddress" scope="default" type="STRING"/>
+        <property expression="//benef_postcode" name="ReceiverPostcode" scope="default" type="STRING"/>
+        <property expression="//benef_address1" name="ReceiverTown" scope="default" type="STRING"/>
+        <property expression="//remitt_benef_relation" name="RelationCode" scope="default" type="STRING"/>
+        <property expression="//benef_ac_type" name="BankAccountTypeCode" scope="default" type="STRING"/>
+        <property expression="//benef_bank_bsb_code" name="BankISOCode" scope="default" type="STRING"/>
+        <property name="AgentCustomer" scope="default" type="STRING" value="123456"/>
+        <property expression="//benef_branch_third_party_id" name="BranchThirdpartid" scope="default" type="STRING"/>
+    </propertyGroup>
+    <script language="js"><![CDATA[var dob = mc.getProperty('SenderDOB');
+    var dobWithoutDashes = dob.replaceAll("-", "");
+    mc.setProperty('SenderDOB', dobWithoutDashes);]]></script>
+    <log level="custom">
+        <property expression="get-property('SenderDOB')" name="SENDER_DOB_LOG"/>
+    </log>
+    <filter xpath="get-property('ReceiveCountry') = 'BD' or get-property('ReceiveCountry') = 'AE'">
+        <then>
+            <dbreport>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[
+        INSERT INTO RemitOneTransactions (TransactionRef, TransactionType, PaymentMethod, BankName, Status, 
+            SenderCountry, SendCountryCurrencyCode, ReceiveCountry, ReceiveCountryCurrencyCode, 
+            ReceiveAmount, SendAmount, Rate, SenderFirstName, SenderLastName, SenderId, SenderCity, 
+            SenderMobile, BenefAc, BenefFirstname, BenefLastname, ReceiverMobileNumber, 
+            BenefBranchCode, BenefBranchTelephone, SourceOfIncome, Purpose, SenderDOB, SenderPlaceOfBirth, 
+            SenderNationality, SenderAddress, SenderPostcode, SenderTown,
+            ReceiverPlaceOfBirth, ReceiverNationality, ReceiverAddress, ReceiverPostcode, 
+            ReceiverTown, RelationCode, BankAccountTypeCode, BankISOCode, AgentCustomer, 
+            BranchThirdpartid, BankTransactionStatus, R1TransactionStatus)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ]]></sql>
+                    <parameter expression="get-property('TransactionReference')" type="VARCHAR"/>
+                    <parameter expression="get-property('TransactionType')" type="VARCHAR"/>
+                    <parameter expression="get-property('PaymentMethod')" type="VARCHAR"/>
+                    <parameter expression="get-property('BankName')" type="VARCHAR"/>
+                    <parameter expression="get-property('Status')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderCountry')" type="VARCHAR"/>
+                    <parameter expression="get-property('SendCountryCurrencyCode')" type="VARCHAR"/>
+                    <parameter expression="get-property('ReceiveCountry')" type="VARCHAR"/>
+                    <parameter expression="get-property('ReceiveCountryCurrencyCode')" type="VARCHAR"/>
+                    <parameter expression="number(get-property('ReceiveAmount'))" type="VARCHAR"/>
+                    <parameter expression="number(get-property('SendAmount'))" type="VARCHAR"/>
+                    <parameter expression="number(get-property('Rate'))" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderFirstName')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderLastName')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderId')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderCity')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderMobile')" type="VARCHAR"/>
+                    <parameter expression="get-property('BenefAc')" type="VARCHAR"/>
+                    <parameter expression="get-property('BenefFirstname')" type="VARCHAR"/>
+                    <parameter expression="get-property('BenefLastname')" type="VARCHAR"/>
+                    <parameter expression="get-property('ReceiverMobileNumber')" type="VARCHAR"/>
+                    <parameter expression="get-property('BenefBranchCode')" type="VARCHAR"/>
+                    <parameter expression="get-property('BenefBranchTelephone')" type="VARCHAR"/>
+                    <parameter expression="get-property('SourceOfIncome')" type="VARCHAR"/>
+                    <parameter expression="get-property('Purpose')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderDOB')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderPlaceOfBirth')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderNationality')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderAddress')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderPostcode')" type="VARCHAR"/>
+                    <parameter expression="get-property('SenderTown')" type="VARCHAR"/>
+                    <parameter expression="get-property('ReceiverPlaceOfBirth')" type="VARCHAR"/>
+                    <parameter expression="get-property('ReceiverNationality')" type="VARCHAR"/>
+                    <parameter expression="get-property('ReceiverAddress')" type="VARCHAR"/>
+                    <parameter expression="get-property('ReceiverPostcode')" type="VARCHAR"/>
+                    <parameter expression="get-property('ReceiverTown')" type="VARCHAR"/>
+                    <parameter expression="get-property('RelationCode')" type="VARCHAR"/>
+                    <parameter expression="get-property('BankAccountTypeCode')" type="VARCHAR"/>
+                    <parameter expression="get-property('BankISOCode')" type="VARCHAR"/>
+                    <parameter expression="get-property('AgentCustomer')" type="VARCHAR"/>
+                    <parameter expression="get-property('BranchThirdpartid')" type="VARCHAR"/>
+                    <parameter expression="get-property('BankTransactionStatus')" type="VARCHAR"/>
+                    <parameter expression="get-property('R1TransactionStatus')" type="VARCHAR"/>
+                </statement>
+            </dbreport>
+        </then>
+        <else>
+            <log level="custom">
+                <property name="message" value="Transaction not processed: Receiving country is neither BD nor UAE."/>
+            </log>
+        </else>
+    </filter>
+    <!--   <property expression="get-property('BankName')" name="BANK_NAME" scope="default" type="STRING"/> -->
+    <!--         <payloadFactory media-type="xml">
+                                <format>
+                                    <params xmlns="">
+                                        <trans_ref>$1</trans_ref>
+                                        <username>$2</username>
+                                        <password>$3</password>
+                                        <pin>$4</pin>
+                                        <bank_name>$5</bank_name>
+                                    </params>
+                                </format>
+                                <args>
+                                    <arg evaluator="xml" expression="get-property('TransactionReference')"/>
+                                    <arg evaluator="xml" expression="get-property('R1_username')"/>
+                                    <arg evaluator="xml" expression="get-property('R1_password')"/>
+                                    <arg evaluator="xml" expression="get-property('R1_pin')"/>
+                                    <arg evaluator="xml" expression="get-property('BANK_NAME')"/>
+                                </args>
+                            </payloadFactory>
+                             -->
+    <switch source="get-property('ReceiveCountry')">
+        <case regex="AE">
+            <sequence key="KeyCloak-USI_Money_Sequence"/>
+        </case>
+        <case regex="BD">
+            <sequence key="SubmitPayoutBangladesh"/>
+        </case>
+        <default/>
+    </switch>
+</sequence>

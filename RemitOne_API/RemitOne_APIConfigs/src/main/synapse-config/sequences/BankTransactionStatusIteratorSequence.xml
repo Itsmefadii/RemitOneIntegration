@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="BankTransactionStatusIteratorSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <log level="full"/>
+    <iterate expression="//*[local-name()='TransactionStatus']" id="TransactionStatusIteration">
+        <target>
+            <sequence>
+                <property expression="//*[local-name()='TransactionReference']" name="TransactionReference" scope="default" type="STRING"/>
+                <property expression="//*[local-name()='AcceptTransaction']" name="AcceptTransaction" scope="default" type="STRING"/>
+                <property expression="//*[local-name()='BankTransactionReference']" name="BankTransactionReference" scope="default" type="STRING"/>
+                <property expression="//*[local-name()='BankTransactionStatus']" name="BankTransactionStatus" scope="default" type="STRING"/>
+                <log level="custom">
+                    <property expression="//*[local-name()='TransactionReference']" name="TransactionReference"/>
+                    <property expression="//*[local-name()='AcceptTransaction']" name="AcceptTransaction"/>
+                    <property expression="//*[local-name()='BankTransactionReference']" name="BankTransactionReference"/>
+                    <property expression="//*[local-name()='BankTransactionStatus']" name="BankTransactionStatus"/>
+                </log>
+                <store messageStore="TransactionStatusStore" sequence="CheckPayoutStatusSequence"/>
+            </sequence>
+        </target>
+    </iterate>
+</sequence>

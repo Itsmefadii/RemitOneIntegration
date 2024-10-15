@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="CreateQuoteSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <log level="custom" separator=",">
+        <property expression="json-eval($)" name="KeyCloakResponse"/>
+        <property expression="json-eval($.access_token)" name="AccessToken"/>
+        <property expression="json-eval($.error)" name="KeyCloakERROR"/>
+    </log>
+    <property expression="json-eval($.access_token)" name="AccessToken" scope="default" type="STRING"/>
+    <property expression="json-eval($.error)" name="KeyCloakERROR" scope="default" type="STRING"/>
+    <property expression="fn:concat('Bearer ', get-property('AccessToken'))" name="AuthHeader" scope="default" type="STRING"/>
+    <switch source="get-property('KeyCloakERROR')">
+        <case regex=".+">
+            <log level="custom">
+                <property expression="get-property('KeyCloakERROR')" name="Error Message"/>
+            </log>
+            <payloadFactory media-type="json">
+                <format>{&#xd;
+error: $1,&#xd;
+}</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('KeyCloakERROR')"/>
+                </args>
+            </payloadFactory>
+        </case>
+        <default>
+            <dblookup>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "CQ_Sender"]]></sql>
+                    <result column="Value" name="Sender"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "channel"]]></sql>
+                    <result column="Value" name="Channel"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "company"]]></sql>
+                    <result column="Value" name="Company"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "branch"]]></sql>
+                    <result column="Value" name="Branch"/>
+                </statement>
+            </dblookup>
+            <log level="custom" separator=",">
+                <property expression="get-property('Sender')" name="SenderLog"/>
+                <property expression="get-property('Channel')" name="ChannelLog"/>
+                <property expression="get-property('Company')" name="CompanyLog"/>
+                <property expression="get-property('Branch')" name="BranchLog"/>
+            </log>
+            <propertyGroup>
+                <property expression="get-property('Sender')" name="Sender" scope="default" type="STRING"/>
+                <property expression="get-property('Channel')" name="Channel" scope="default" type="STRING"/>
+                <property expression="get-property('Company')" name="Company" scope="default" type="STRING"/>
+                <property expression="get-property('Branch')" name="Branch" scope="default" type="STRING"/>
+            </propertyGroup>
+            <header name="Content-Type" scope="transport" value="application/json"/>
+            <header expression="get-property('Sender')" name="sender" scope="transport"/>
+            <header expression="get-property('Channel')" name="channel" scope="transport"/>
+            <header expression="get-property('Company')" name="company" scope="transport"/>
+            <header expression="get-property('Branch')" name="branch" scope="transport"/>
+            <header expression="get-property('AuthHeader')" name="Authorization" scope="transport"/>
+            <payloadFactory media-type="json">
+                <format>{
+   "sending_country_code": "SG",
+    "sending_currency_code": "USD",
+    "receiving_country_code": "BD",
+    "receiving_currency_code": "BDT",
+    "sending_amount": 100,
+    "receiving_mode": "BANK",
+    "type": "SEND",
+    "instrument": "REMITTANCE"
+}</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('SendCountry')"/>
+                    <arg evaluator="xml" expression="get-property('SendCountryCurrencyCode')"/>
+                    <arg evaluator="xml" expression="get-property('SendAmount')"/>
+                    <arg evaluator="xml" expression="get-property('ReceiveCountry')"/>
+                    <arg evaluator="xml" expression="get-property('ReceiveCountryCurrencyCode')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" scope="axis2" type="STRING" value="application/json"/>
+            <log level="full"/>
+            <send receive="CreateTransactionSequence">
+                <endpoint key="CreateQuoteEndpoint"/>
+            </send>
+        </default>
+    </switch>
+</sequence>

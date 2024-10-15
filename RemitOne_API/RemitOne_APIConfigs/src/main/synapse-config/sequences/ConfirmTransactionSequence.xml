@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="ConfirmTransactionSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <log level="custom" separator=",">
+        <property expression="json-eval($)" name="CreateTransactionResponse"/>
+        <property expression="json-eval($.data.transaction_ref_number)" name="TransactionRefNumber"/>
+    </log>
+    <property expression="json-eval($.data.transaction_ref_number)" name="TransactionRefNumber" scope="default" type="STRING"/>
+    <header name="Content-Type" scope="transport" value="application/json"/>
+    <header name="sender" scope="transport" value="usimoney"/>
+    <header name="channel" scope="transport" value="Direct"/>
+    <header name="company" scope="transport" value="702800"/>
+    <header name="branch" scope="transport" value="702806"/>
+    <header expression="get-property('AuthHeader')" name="Authorization" scope="transport"/>
+    <payloadFactory media-type="json">
+        <format>{&#xd;
+    "transaction_ref_number": "$1"&#xd;
+}</format>
+        <args>
+            <arg evaluator="xml" expression="get-property('TransactionRefNumber')"/>
+        </args>
+    </payloadFactory>
+    <property name="messageType" scope="axis2" type="STRING" value="application/json"/>
+    <log level="full"/>
+    <call>
+        <endpoint key="ConfirmTransactionEndpoimt"/>
+    </call>
+    <respond/>
+</sequence>

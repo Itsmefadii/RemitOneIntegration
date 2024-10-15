@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="GetPayoutTransactions" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <log level="custom" separator=",">
+        <property expression="get-property('BankName')" name="BankNameLog"/>
+    </log>
+    <dblookup>
+        <connection>
+            <pool>
+                <driver>com.mysql.jdbc.Driver</driver>
+                <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                <user>admin</user>
+                <password>dobuy10014</password>
+            </pool>
+        </connection>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "Remit1" and App_key = "username"]]></sql>
+            <result column="Value" name="R1_username"/>
+        </statement>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "Remit1" and App_key = "password"]]></sql>
+            <result column="Value" name="R1_password"/>
+        </statement>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "Remit1" and App_key = "pin"]]></sql>
+            <result column="Value" name="R1_pin"/>
+        </statement>
+    </dblookup>
+    <log level="custom" separator=",">
+        <property expression="get-property('R1_username')" name="R1_usernameLog"/>
+        <property expression="get-property('R1_password')" name="R1_passwordLog"/>
+        <property expression="get-property('R1_pin')" name="R1_pinLog"/>
+    </log>
+    <propertyGroup>
+        <property expression="get-property('R1_username')" name="R1_username" scope="default" type="STRING"/>
+        <property expression="get-property('R1_password')" name="R1_password" scope="default" type="STRING"/>
+        <property expression="get-property('R1_pin')" name="R1_pin" scope="default" type="STRING"/>
+    </propertyGroup>
+    <filter xmlns:soap12="http://www.w3.org/2003/05/soap-envelope" xpath="not(get-property('R1_username')) or not(get-property('R1_password')) or not(get-property('R1_pin')) or not(get-property('BankName'))">
+        <then>
+            <log level="custom">
+                <property name="ERROR" value="Invalid or missing credentials!"/>
+            </log>
+            <makefault version="soap12">
+                <code value="soap12Env:Sender" xmlns:soap12Env="http://www.w3.org/2003/05/soap-envelope"/>
+                <reason value="Invalid or missing credentials"/>
+            </makefault>
+        </then>
+        <else>
+            <payloadFactory media-type="xml">
+                <format>
+                    <params xmlns="">
+                        <username>$1</username>
+                        <password>$2</password>
+                        <pin>$3</pin>
+                        <bank_name>$4</bank_name>
+                    </params>
+                </format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('R1_username')"/>
+                    <arg evaluator="xml" expression="get-property('R1_password')"/>
+                    <arg evaluator="xml" expression="get-property('R1_pin')"/>
+                    <arg evaluator="xml" expression="get-property('BankName')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" scope="axis2" type="STRING" value="application/x-www-form-urlencoded"/>
+            <log/>
+            <send receive="TransactionsIterator">
+                <endpoint key="GetPayoutTransactionEndpoints"/>
+            </send>
+        </else>
+    </filter>
+</sequence>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="HandleCancellationSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <dblookup>
+        <connection>
+            <pool>
+                <driver>com.mysql.jdbc.Driver</driver>
+                <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                <user>admin</user>
+                <password>dobuy10014</password>
+            </pool>
+        </connection>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "Remit1" and App_key = "username"]]></sql>
+            <result column="Value" name="R1_username"/>
+        </statement>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "Remit1" and App_key = "password"]]></sql>
+            <result column="Value" name="R1_password"/>
+        </statement>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "Remit1" and App_key = "pin"]]></sql>
+            <result column="Value" name="R1_pin"/>
+        </statement>
+    </dblookup>
+    <log level="custom">
+        <property expression="get-property('R1_username')" name="R1_username_LOG"/>
+        <property expression="get-property('R1_password')" name="R1_password_LOG"/>
+        <property expression="get-property('R1_pin')" name="R1_pin_LOG"/>
+        <property expression="get-property('TransactionReference')" name="TransactionReference_LOG"/>
+    </log>
+    <payloadFactory media-type="xml">
+        <format>
+            <params xmlns="">
+                <trans_ref>$1</trans_ref>
+                <username>$2</username>
+                <password>$3</password>
+                <pin>$4</pin>
+            </params>
+        </format>
+        <args>
+            <arg evaluator="xml" expression="get-property('TransactionReference')"/>
+            <arg evaluator="xml" expression="get-property('R1_username')"/>
+            <arg evaluator="xml" expression="get-property('R1_password')"/>
+            <arg evaluator="xml" expression="get-property('R1_pin')"/>
+        </args>
+    </payloadFactory>
+    <property name="messageType" scope="axis2" type="STRING" value="application/x-www-form-urlencoded"/>
+    <call>
+        <endpoint key="RequestCancellationEndpoint"/>
+    </call>
+    <switch source="get-property('AcceptTransaction')">
+        <case regex="true">
+            <property name="AcceptTransactionValue" scope="default" type="STRING" value="1"/>
+        </case>
+        <case regex="false">
+            <property name="AcceptTransactionValue" scope="default" type="STRING" value="0"/>
+        </case>
+        <default/>
+    </switch>
+    <dbreport>
+        <connection>
+            <pool>
+                <driver>com.mysql.jdbc.Driver</driver>
+                <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                <user>admin</user>
+                <password>dobuy10014</password>
+            </pool>
+        </connection>
+        <statement>
+            <sql><![CDATA[Insert into BankTransactions (TransactionRef, AcceptTransaction, BankTransactionRef, BankTransactionStatus, Comments) VALUES (?, ?, ?, ?, ?)]]></sql>
+            <parameter expression="get-property('TransactionReference')" type="VARCHAR"/>
+            <parameter expression="get-property('AcceptTransactionValue')" type="VARCHAR"/>
+            <parameter expression="get-property('BankTransactionReference')" type="VARCHAR"/>
+            <parameter expression="get-property('Bank_Transaction_Description')" type="VARCHAR"/>
+            <parameter type="VARCHAR" value="Cancelled"/>
+        </statement>
+    </dbreport>
+    <respond/>
+</sequence>

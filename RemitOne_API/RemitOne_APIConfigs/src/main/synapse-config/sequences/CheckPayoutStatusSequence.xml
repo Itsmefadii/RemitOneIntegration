@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="CheckPayoutStatusSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <log level="custom">
+        <property expression="get-property('TransactionReference')" name="TransactionReferenceLog"/>
+        <property expression="get-property('AcceptTransaction')" name="AcceptTransactionLog"/>
+        <property expression="get-property('BankTransactionReference')" name="BankTransactionReferenceLog"/>
+        <property expression="get-property('BankTransactionStatus')" name="BankTransactionStatusLog"/>
+    </log>
+    <switch source="get-property('BankTransactionStatus')">
+        <case regex=".*+">
+            <dblookup>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "DLocal" and App_key = "X-Login"]]></sql>
+                    <result column="Value" name="DL_X-Login"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "DLocal" and App_key = "X-Trans-Key"]]></sql>
+                    <result column="Value" name="DL_X-Trans-Key"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "DLocal" and App_key = "SecretKey"]]></sql>
+                    <result column="Value" name="DL_SecretKey"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "DLocal" and App_key = "login"]]></sql>
+                    <result column="Value" name="Login"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "DLocal" and App_key = "pass"]]></sql>
+                    <result column="Value" name="Pass"/>
+                </statement>
+            </dblookup>
+            <log level="custom" separator=",">
+                <property expression="get-property('DL_X-Login')" name="DL_X-LoginLog"/>
+                <property expression="get-property('DL_X-Trans-Key')" name="DL_X-Trans-KeyLog"/>
+                <property expression="get-property('DL_SecretKey')" name="DL_SecretKeyLog"/>
+                <property expression="get-property('Login')" name="CP_LoginLog"/>
+                <property expression="get-property('Pass')" name="CP_PassLog"/>
+            </log>
+            <payloadFactory media-type="json">
+                <format>
+			{
+			"login":"$1",
+			"pass":"$2",
+			"cashout_id": "$3"
+			}
+		</format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('Login')"/>
+                    <arg evaluator="xml" expression="get-property('Pass')"/>
+                    <arg evaluator="xml" expression="get-property('BankTransactionReference')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" scope="axis2" type="STRING" value="application/json"/>
+            <header expression="get-property('DL_X-Login')" name="X-Login" scope="transport"/>
+            <header expression="get-property('DL_X-Trans-Key')" name="X-Trans-Key" scope="transport"/>
+            <header expression="get-property('DL_SecretKey')" name="SecretKey" scope="transport"/>
+            <log level="full"/>
+            <send receive="AcceptPayoutTransactionSequence">
+                <endpoint key="CheckPayoutStatusEndpoint"/>
+            </send>
+        </case>
+        <default/>
+    </switch>
+</sequence>

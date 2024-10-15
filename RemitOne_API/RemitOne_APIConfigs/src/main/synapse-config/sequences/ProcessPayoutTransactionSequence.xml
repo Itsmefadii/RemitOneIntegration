@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="ProcessPayoutTransactionSequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <property name="AcceptResponse" scope="transport" type="STRING" value=""/>
+    <log level="custom">
+        <property expression="get-property('AcceptResponse')" name="Accept Response 1"/>
+    </log>
+    <enrich>
+        <source clone="true" type="body"/>
+        <target property="AcceptResponse" type="property"/>
+    </enrich>
+    <log level="custom">
+        <property expression="get-property('AcceptResponse')" name="Accept Response 2"/>
+        <property expression="get-property('AcceptResponse')/transaction" name="Accept Response 3"/>
+        <property expression="get-property('AcceptResponse')/operation_result" name="Accept Response 4"/>
+    </log>
+    <property expression="get-property('AcceptResponse')/operation_result" name="OperationResult" scope="default" type="STRING"/>
+    <log level="custom">
+        <property expression="get-property('OperationResult')" name="OperationResult Response"/>
+    </log>
+    <log level="custom">
+        <property expression="get-property('R1_username')" name="R1_username_LOG"/>
+        <property expression="get-property('R1_password')" name="R1_password_LOG"/>
+        <property expression="get-property('R1_pin')" name="R1_pin_LOG"/>
+        <property expression="get-property('TransactionReference')" name="TransactionReference_LOG"/>
+        <property expression="get-property('BankName')" name="BankName_LOG"/>
+    </log>
+    <log level="full"/>
+    <dbreport>
+        <connection>
+            <pool>
+                <driver>com.mysql.jdbc.Driver</driver>
+                <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                <user>admin</user>
+                <password>dobuy10014</password>
+            </pool>
+        </connection>
+        <statement>
+            <sql><![CDATA[Insert into BankTransactions (TransactionRef, AcceptTransaction, BankTransactionRef, BankTransactionStatus) VALUES (?, ?, ?, ?)]]></sql>
+            <parameter expression="get-property('TransactionReference')" type="VARCHAR"/>
+            <parameter type="VARCHAR" value="1"/>
+            <parameter expression="get-property('BankTransactionReference')" type="VARCHAR"/>
+            <parameter expression="get-property('Bank_Transaction_Description')" type="VARCHAR"/>
+        </statement>
+    </dbreport>
+    <switch source="get-property('Bank_Transaction_Description')">
+        <case regex="Completed">
+            <dblookup>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "Remit1" and App_key = "username"]]></sql>
+                    <result column="Value" name="R1_username"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "Remit1" and App_key = "password"]]></sql>
+                    <result column="Value" name="R1_password"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "Remit1" and App_key = "pin"]]></sql>
+                    <result column="Value" name="R1_pin"/>
+                </statement>
+                <statement>
+                    <sql><![CDATA[Select BankName from RemitOneTransactions WHERE TransactionRef = ?]]></sql>
+                    <parameter expression="get-property('TransactionReference')" type="VARCHAR"/>
+                    <result column="BankName" name="BankName"/>
+                </statement>
+            </dblookup>
+            <payloadFactory media-type="xml">
+                <format>
+                    <params xmlns="">
+                        <trans_ref>$1</trans_ref>
+                        <username>$2</username>
+                        <password>$3</password>
+                        <pin>$4</pin>
+                        <bank_name>$5</bank_name>
+                    </params>
+                </format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('TransactionReference')"/>
+                    <arg evaluator="xml" expression="get-property('R1_username')"/>
+                    <arg evaluator="xml" expression="get-property('R1_password')"/>
+                    <arg evaluator="xml" expression="get-property('R1_pin')"/>
+                    <arg evaluator="xml" expression="get-property('BankName')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" scope="axis2" type="STRING" value="application/x-www-form-urlencoded"/>
+            <call>
+                <endpoint key="ProcessPayoutTransactionEndpoint"/>
+            </call>
+            <respond/>
+        </case>
+        <case regex="^(?!.*Completed).*$">
+            <respond/>
+        </case>
+        <default/>
+    </switch>
+</sequence>

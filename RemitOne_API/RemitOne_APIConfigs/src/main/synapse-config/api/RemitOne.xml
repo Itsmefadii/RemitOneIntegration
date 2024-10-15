@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/RemitterAPI" name="RemitterOne" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="POST" uri-template="/getPayoutTransaction">
+        <inSequence>
+            <sequence key="GetBankName"/>
+        </inSequence>
+        <outSequence/>
+        <faultSequence/>
+    </resource>
+    <resource methods="POST" uri-template="/checkPayoutStatus">
+        <inSequence>
+            <sequence key="BankTransactionStatusSequence"/>
+        </inSequence>
+        <outSequence/>
+        <faultSequence/>
+    </resource>
+</api>

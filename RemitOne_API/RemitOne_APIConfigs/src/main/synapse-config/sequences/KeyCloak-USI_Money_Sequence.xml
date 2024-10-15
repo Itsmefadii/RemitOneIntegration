@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sequence name="KeyCloak-USI_Money_Sequence" trace="disable" xmlns="http://ws.apache.org/ns/synapse">
+    <property name="AcceptPayoutTransactionResponse" scope="transport" type="STRING" value=""/>
+    <log level="custom">
+        <property expression="get-property('AcceptPayoutTransactionResponse')" name="TransactionDetailResponsee 1"/>
+    </log>
+    <enrich>
+        <source clone="true" type="body"/>
+        <target property="AcceptPayoutTransactionResponse" type="property"/>
+    </enrich>
+    <log level="custom">
+        <property expression="get-property('AcceptPayoutTransactionResponse')" name="AcceptPayoutTransactionResponse 2"/>
+    </log>
+    <log level="custom" separator=",">
+        <property expression="get-property('axis2', 'HTTP_SC')" name="HTTP_Status_Code"/>
+    </log>
+    <property expression="get-property('axis2', 'HTTP_SC')" name="Acceptpayout_HTTP_STATUS_CODE" scope="default" type="STRING"/>
+    <property name="Endpoint_NAME" scope="default" type="STRING" value="AcceptPayoutTransactionDetailsEndpoint"/>
+    <switch source="Acceptpayout_HTTP_STATUS_CODE">
+        <case regex="200">
+            <dbreport>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[INSERT into Response_Codes ( EndpointName, ResponseCodes, Messages) Values (?, ?, ?)]]></sql>
+                    <parameter expression="get-property('Endpoint_NAME')" type="VARCHAR"/>
+                    <parameter expression="get-property('Acceptpayout_HTTP_STATUS_CODE')" type="VARCHAR"/>
+                    <parameter expression="get-property('TransactionDetailResponse')" type="VARCHAR"/>
+                </statement>
+            </dbreport>
+            <respond/>
+        </case>
+        <case regex="500">
+            <log level="full">
+                <property name="Error" value="Server Not Found"/>
+            </log>
+            <property name="TransactionDetailsError" scope="default" type="STRING" value="Server Not Found"/>
+            <payloadFactory media-type="xml">
+                <format>
+                    <error>
+                        <message>$1</message>
+                    </error>
+                </format>
+                <args>
+                    <arg evaluator="xml" expression="TransactionDetailsError"/>
+                </args>
+            </payloadFactory>
+            <dbreport>
+                <connection>
+                    <pool>
+                        <driver>com.mysql.jdbc.Driver</driver>
+                        <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                        <user>admin</user>
+                        <password>dobuy10014</password>
+                    </pool>
+                </connection>
+                <statement>
+                    <sql><![CDATA[INSERT into Response_Codes ( EndpointName, ResponseCodes, Messages) Values (?, ?, ?)]]></sql>
+                    <parameter expression="get-property('Endpoint_NAME')" type="VARCHAR"/>
+                    <parameter expression="get-property('GetPayoutTranDetails_HTTP_STATUS_CODE')" type="VARCHAR"/>
+                    <parameter expression="get-property('TransactionDetailResponse')" type="VARCHAR"/>
+                </statement>
+            </dbreport>
+            <respond/>
+        </case>
+        <default/>
+    </switch>
+    <!-- <dblookup>
+        <connection>
+            <pool>
+                <driver>com.mysql.jdbc.Driver</driver>
+                <url>jdbc:mysql://multi-groceries-db.cx5wkaagxbmx.eu-west-1.rds.amazonaws.com:3306/remitOne</url>
+                <user>admin</user>
+                <password>dobuy10014</password>
+            </pool>
+        </connection>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "username"]]></sql>
+            <result column="Value" name="D9_Username"/>
+        </statement>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "password"]]></sql>
+            <result column="Value" name="D9_Password"/>
+        </statement>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "grant_type"]]></sql>
+            <result column="Value" name="D9_Grant_Type"/>
+        </statement>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "client_id"]]></sql>
+            <result column="Value" name="D9_Client_Id"/>
+        </statement>
+        <statement>
+            <sql><![CDATA[Select Value from Transaction_Credentials WHERE Application = "D9" and App_key = "client_secret"]]></sql>
+            <result column="Value" name="D9_Client_Secret"/>
+        </statement>
+    </dblookup>
+    <log level="custom" separator=",">
+        <property expression="get-property('D9_Username')" name="D9_UsernameLog"/>
+        <property expression="get-property('D9_Password')" name="D9_PasswordLog"/>
+        <property expression="get-property('D9_Grant_Type')" name="D9_GrantTypeLog"/>
+        <property expression="get-property('D9_Client_Id')" name="D9_Client_IdLog"/>
+        <property expression="get-property('D9_Client_Secret')" name="D9_Client_SecretLog"/>
+    </log>
+    <propertyGroup>
+        <property expression="get-property('D9_Username')" name="D9_Username" scope="default" type="STRING"/>
+        <property expression="get-property('D9_Password')" name="D9_Password" scope="default" type="STRING"/>
+        <property expression="get-property('D9_Grant_Type')" name="D9_Grant_Type" scope="default" type="STRING"/>
+        <property expression="get-property('D9_Client_Id')" name="D9_Client_Id" scope="default" type="STRING"/>
+        <property expression="get-property('D9_Client_Secret')" name="D9_Client_Secret" scope="default" type="STRING"/>
+    </propertyGroup>
+    <filter xmlns:soap12="http://www.w3.org/2003/05/soap-envelope" xpath="not(get-property('D9_Username')) or not(get-property('D9_Password')) or not(get-property('D9_Grant_Type')) or not(get-property('D9_Client_Id')) or not(get-property('D9_Client_Secret'))">
+        <then>
+            <log level="custom">
+                <property name="ERROR" value="Invalid or missing credentials"/>
+            </log>
+            <makefault version="soap12">
+                <code value="soap12Env:Sender" xmlns:soap12Env="http://www.w3.org/2003/05/soap-envelope"/>
+                <reason value="Invalid or missing credentials"/>
+            </makefault>
+        </then>
+        <else>
+            <payloadFactory media-type="xml">
+                <format>
+                    <params xmlns="">
+                        <username>$1</username>
+                        <password>$2</password>
+                        <grant_type>$3</grant_type>
+                        <client_id>$4</client_id>
+                        <client_secret>$5</client_secret>
+                    </params>
+                </format>
+                <args>
+                    <arg evaluator="xml" expression="get-property('D9_Username')"/>
+                    <arg evaluator="xml" expression="get-property('D9_Password')"/>
+                    <arg evaluator="xml" expression="get-property('D9_Grant_Type')"/>
+                    <arg evaluator="xml" expression="get-property('D9_Client_Id')"/>
+                    <arg evaluator="xml" expression="get-property('D9_Client_Secret')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" scope="axis2" type="STRING" value="application/x-www-form-urlencoded"/>
+            <log level="full"/>
+            <send receive="CreateQuoteSequence">
+                <endpoint key="keyClaok-USIMoneyEndpoint"/>
+            </send>
+        </else>
+    </filter>
+ -->
+</sequence>
